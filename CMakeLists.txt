@@ -6,23 +6,23 @@ find_package(verilator HINTS $ENV(VERILATOR_ROOT))
 ## define targets
 
 add_library(serial_console STATIC
-  lib/serial_console.hpp
-  lib/serial_console.cpp
-  lib/SimUART.cpp
+  src/serial_console.hpp
+  src/serial_console.cpp
+  src/SimUART.cpp
   )
-target_include_directories(serial_console PUBLIC lib)
-verilate(serial_console SOURCES lib/SimUART.sv)
+target_include_directories(serial_console PUBLIC src)
+verilate(serial_console SOURCES src/SimUART.sv)
 add_executable(UART_DPI
-  src/main.cpp
+  test/main.cpp
   )
 target_link_libraries(UART_DPI PUBLIC serial_console PRIVATE)
 verilate(UART_DPI
-  SOURCES src/main.sv
-  INCLUDE_DIRS lib
+  SOURCES test/main.sv
+  INCLUDE_DIRS src
   TOP_MODULE main
   TRACE_FST)
 
 add_executable(UART_TEST
-  src/echo_test.cpp
+  test/echo_test.cpp
   )
 target_link_libraries(UART_TEST PUBLIC serial_console PRIVATE)
