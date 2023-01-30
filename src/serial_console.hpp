@@ -35,7 +35,7 @@ class serial_console_t
 static const uint64_t baud_rate   = 3 * 10e5;
 static const uint64_t baud_period = 333; // ns
 static const uint64_t clk_rate    = 50 * 10e5;
-static const uint64_t clk_period  = 10; // ns
+static const uint64_t clk_period  = 20; // ns
 // The number of ticks required until one symbol has been send by uart.
 static const uint64_t baud_ticks = clk_rate / baud_rate;
 

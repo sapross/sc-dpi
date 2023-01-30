@@ -33,8 +33,6 @@ module SimUART (
 
    reg          init_done_sticky;
 
-   const int unsigned exit_on_num_char = 10;
-
    assign #0.1 uart_rx = __uart_rx;
 
    assign #0.1 exit = __exit;

@@ -1,5 +1,6 @@
 #include "serial_console.hpp"
 #include <assert.h>
+#include <cstdint>
 #include <iostream>
 #include <stdarg.h>
 #include <stdio.h>
@@ -59,6 +60,7 @@ void serial_console_t::send()
 
     static enum uart_st state = st_idle;
     // Current byte/word being sent.
+    ssize_t        len     = 0;
     static uint8_t current = 0;
     // Index of the current bit being sent.
     static size_t data_index = 0;
@@ -67,17 +69,16 @@ void serial_console_t::send()
     {
     case (st_idle):
         l_tx = 1;
-        if (input.size() > 0)
+        len  = read(server_fd, &current, 1);
+        if (len > 0)
         {
-            current = input.front();
-            input.pop();
             state = st_start;
         }
         break;
     case (st_start):
         num_ticks++;
         l_tx = 0;
-        if (num_ticks > baud_ticks)
+        if (num_ticks >= baud_ticks)
         {
             num_ticks = 0;
             state     = st_data;
@@ -86,7 +87,7 @@ void serial_console_t::send()
     case (st_data):
         num_ticks++;
         l_tx = (current >> (data_index)) & 1u;
-        if (num_ticks > baud_ticks)
+        if (num_ticks >= baud_ticks)
         {
             num_ticks = 0;
             // std::cout << (int)l_tx;
@@ -103,7 +104,7 @@ void serial_console_t::send()
     case (st_stop):
         num_ticks++;
         l_tx = 1;
-        if (num_ticks > baud_ticks)
+        if (num_ticks >= baud_ticks)
         {
             num_ticks = 0;
             state     = st_idle;
@@ -139,7 +140,7 @@ void serial_console_t::receive()
     case (st_start):
         num_ticks++;
         // Wait for 1/2 the baudrate to sample at the center of the baud period.
-        if (num_ticks > baud_ticks / 2)
+        if (num_ticks >= baud_ticks / 2)
         {
             num_ticks = 0;
             current   = 0;
@@ -148,7 +149,7 @@ void serial_console_t::receive()
         break;
     case (st_data):
         num_ticks++;
-        if (num_ticks > baud_ticks)
+        if (num_ticks >= baud_ticks)
         {
             num_ticks = 0;
             current |= l_rx << data_index;
@@ -165,7 +166,7 @@ void serial_console_t::receive()
         break;
     case (st_stop):
         num_ticks++;
-        if (num_ticks > baud_ticks / 2)
+        if (num_ticks >= baud_ticks / 2)
         {
             num_ticks = 0;
             state     = st_idle;
@@ -176,7 +177,7 @@ void serial_console_t::receive()
 }
 void serial_console_t::tick(uint8_t* uart_rx, uint8_t uart_tx)
 {
-    char data;
+    uint8_t data;
     // Attempt to read a byte from the serial driver.
     // Termios is configured to immediately return, whether data
     // is available or not. This prevents the simulation from stopping or
@@ -185,12 +186,12 @@ void serial_console_t::tick(uint8_t* uart_rx, uint8_t uart_tx)
     // std::cout << "Tick" << std::endl;
 
     // Get new data from TTY
-    ssize_t len = read(server_fd, &data, 1);
-    if (len == 1)
-    {
-        // std::cout << "R:" << (int)(data) << std::endl;
-        input.push(data);
-    }
+    // ssize_t len = read(server_fd, &data, 1);
+    // if (len == 1)
+    // {
+    //     // std::cout << "R:" << (int)(data) << std::endl;
+    //     input.push(data);
+    // }
     // Send data over simulated UART.
     send();
     // Receive data over simulated UART
@@ -204,6 +205,7 @@ void serial_console_t::tick(uint8_t* uart_rx, uint8_t uart_tx)
         // std::cout << "S: " << (int)(data) << std::endl;
         output.pop();
         write(server_fd, &data, 1);
+        tcdrain(server_fd);
     }
 
     // Due to the function of the serial_console, tx and l_rx are swapped in the
