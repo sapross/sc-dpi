@@ -24,18 +24,17 @@ module SimUART (
 
    bit          r_reset;
 
-   wire         #0.1 __uart_tx = uart_tx_driven ?
+   wire         __uart_tx = uart_tx_driven ?
                 uart_tx : 1;
 
-   bit          __uart_tx;
    bit          __uart_rx;
    int          __exit;
 
    reg          init_done_sticky;
 
-   assign #0.1 uart_rx = __uart_rx;
+   assign uart_rx = __uart_rx;
 
-   assign #0.1 exit = __exit;
+   assign exit = __exit;
 
    always @(posedge clock) begin
       r_reset <= reset;

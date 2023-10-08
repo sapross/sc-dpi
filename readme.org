@@ -1,0 +1,13 @@
+#+title: SC-DPI
+
+Serial console direct programming interface (DPI) for use with Verilator.
+
+Build the echo test using
+#+begin_src shell
+cmake -S . -B build; cmake --build build
+#+end_src
+and run using
+#+begin_src shell
+./build/UART_DPI
+#+end_src
+The test will open and print the location of a pseudo terminal. Test echo functionality using your serial console of choice.
